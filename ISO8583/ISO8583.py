@@ -1169,11 +1169,11 @@ class ISO8583:
             if self.DEBUG == True:
                 print('Pack Little-endian')
         print(netIso)
-        netIso += asciiIso.encode('ascii')
+        netIso = asciiIso.encode('ascii')
 
         # damith added .encode('ascii')
 
-        return netIso
+        return asciiIso
 
     ################################################################################################
 
@@ -1212,20 +1212,24 @@ class ISO8583:
         if len(iso) < 24:
             raise InvalidIso8583('This is not a valid iso!!Invalid Size')
 
-        size = iso[0:2]
-        if bigEndian:
-            size = struct.unpack('!h', size)
-            if self.DEBUG == True:
-                print('Unpack Big-endian')
-        else:
-            size = struct.unpack('<h', size)
-            if self.DEBUG == True:
-                print('Unpack Little-endian')
+        print(len(iso))
+        # print(iso[2:])
+        # size = iso[0:2]
+        # if bigEndian:
+        #     size = struct.unpack('!h', size)
+        #     if self.DEBUG == True:
+        #         print('Unpack Big-endian')
+        # else:
+        #     size = struct.unpack('<h', size)
+        #     if self.DEBUG == True:
+        #         print('Unpack Little-endian')
+        #
+        # print(size)
+        # print(len(iso))
+        # if len(iso) != (size[0] + 2):
+        #     raise InvalidIso8583(
+        #         'This is not a valid iso!!The ISO8583 ASCII(%s) is less than the size %s!' % (len(iso[2:]), size[0]))
 
-        if len(iso) != (size[0] + 2):
-            raise InvalidIso8583(
-                'This is not a valid iso!!The ISO8583 ASCII(%s) is less than the size %s!' % (len(iso[2:]), size[0]))
-
-        self.setIsoContent(iso[2:])
+        self.setIsoContent(iso)
 
     ################################################################################################
