@@ -23,6 +23,7 @@ __licence__ = 'GPL V3'
 
 from ISO8583.ISOErrors import *
 import struct
+import codecs
 
 
 class ISO8583:
@@ -88,7 +89,7 @@ class ISO8583:
     # W = size of the information that N need to has
     # K = type os values a, an, n, ansb, b
     _BITS_VALUE_TYPE[1] = ['BME', 'Bit Map Extended', 'B', 16, 'b']
-    _BITS_VALUE_TYPE[2] = ['2', 'Primary account number (PAN)', 'LL', 19, 'n']
+    _BITS_VALUE_TYPE[2] = ['2', 'Primary account number (PAN)', 'N', 19, 'n']
     _BITS_VALUE_TYPE[3] = ['3', 'Precessing code', 'N', 6, 'n']
     _BITS_VALUE_TYPE[4] = ['4', 'Amount transaction', 'N', 12, 'n']
     _BITS_VALUE_TYPE[5] = ['5', 'Amount reconciliation', 'N', 12, 'n']
@@ -108,9 +109,9 @@ class ISO8583:
     _BITS_VALUE_TYPE[19] = ['19', 'Country code acquiring institution', 'N', 3, 'n']
     _BITS_VALUE_TYPE[20] = ['20', 'Country code primary account number (PAN)', 'N', 3, 'n']
     _BITS_VALUE_TYPE[21] = ['21', 'Transaction life cycle identification data', 'ANS', 3, 'n']
-    _BITS_VALUE_TYPE[22] = ['22', 'Point of service data code', 'N', 3, 'n']
+    _BITS_VALUE_TYPE[22] = ['22', 'Point of service data code', 'N', 4, 'n']  # limit changed from 3 to 4
     _BITS_VALUE_TYPE[23] = ['23', 'Card sequence number', 'N', 3, 'n']
-    _BITS_VALUE_TYPE[24] = ['24', 'Function code', 'N', 3, 'n']
+    _BITS_VALUE_TYPE[24] = ['24', 'Function code', 'N', 4, 'n']  # limit changed from 3 to 4
     _BITS_VALUE_TYPE[25] = ['25', 'Message reason code', 'N', 2, 'n']
     _BITS_VALUE_TYPE[26] = ['26', 'Merchant category code', 'N', 2, 'n']
     _BITS_VALUE_TYPE[27] = ['27', 'Point of service capability', 'N', 1, 'n']
@@ -121,36 +122,36 @@ class ISO8583:
     _BITS_VALUE_TYPE[32] = ['32', 'Acquiring institution identification code', 'LL', 11, 'n']
     _BITS_VALUE_TYPE[33] = ['33', 'Forwarding institution identification code', 'LL', 11, 'n']
     _BITS_VALUE_TYPE[34] = ['34', 'Electronic commerce data', 'LL', 28, 'n']
-    _BITS_VALUE_TYPE[35] = ['35', 'Track 2 data', 'LL', 37, 'n']
+    _BITS_VALUE_TYPE[35] = ['35', 'Track 2 data', 'LL', 37, 'z']
     _BITS_VALUE_TYPE[36] = ['36', 'Track 3 data', 'LLL', 104, 'n']
-    _BITS_VALUE_TYPE[37] = ['37', 'Retrieval reference number', 'N', 12, 'an']
-    _BITS_VALUE_TYPE[38] = ['38', 'Approval code', 'N', 6, 'an']
-    _BITS_VALUE_TYPE[39] = ['39', 'Action code', 'A', 2, 'an']
+    _BITS_VALUE_TYPE[37] = ['37', 'Retrieval reference number', 'AN', 12, 'an']
+    _BITS_VALUE_TYPE[38] = ['38', 'Approval code', 'AN', 6, 'an']
+    _BITS_VALUE_TYPE[39] = ['39', 'Action code', 'AN', 2, 'an']
     _BITS_VALUE_TYPE[40] = ['40', 'Service code', 'N', 3, 'an']
-    _BITS_VALUE_TYPE[41] = ['41', 'Card acceptor terminal identification', 'N', 8, 'ans']
-    _BITS_VALUE_TYPE[42] = ['42', 'Card acceptor identification code', 'A', 15, 'ans']
-    _BITS_VALUE_TYPE[43] = ['43', 'Card acceptor name/location', 'A', 40, 'asn']
+    _BITS_VALUE_TYPE[41] = ['41', 'Card acceptor terminal identification', 'ANS', 8, 'ans']
+    _BITS_VALUE_TYPE[42] = ['42', 'Card acceptor identification code', 'ANS', 15, 'ans']
+    _BITS_VALUE_TYPE[43] = ['43', 'Card acceptor name/location', 'ANS', 40, 'asn']
     _BITS_VALUE_TYPE[44] = ['44', 'Additional response data', 'LL', 25, 'an']
-    _BITS_VALUE_TYPE[45] = ['45', 'Track 1 data', 'LL', 76, 'an']
+    _BITS_VALUE_TYPE[45] = ['45', 'Track 1 data', 'ANS', 76, 'ans']
     _BITS_VALUE_TYPE[46] = ['46', 'Amounts fees', 'LLL', 999, 'an']
     _BITS_VALUE_TYPE[47] = ['47', 'Additional data national', 'LLL', 999, 'an']
-    _BITS_VALUE_TYPE[48] = ['48', 'Additional data private', 'LLL', 999, 'an']
+    _BITS_VALUE_TYPE[48] = ['48', 'Additional data private', 'LLL', 999, 'ans']
     _BITS_VALUE_TYPE[49] = ['49', 'Verification data', 'A', 3, 'a']
     _BITS_VALUE_TYPE[50] = ['50', 'Currency code, settlement', 'AN', 3, 'an']
     _BITS_VALUE_TYPE[51] = ['51', 'Currency code, cardholder billing', 'A', 3, 'a']
-    _BITS_VALUE_TYPE[52] = ['52', 'Personal identification number (PIN) data', 'B', 16, 'b']
-    _BITS_VALUE_TYPE[53] = ['53', 'Security related control information', 'LL', 18, 'n']
+    _BITS_VALUE_TYPE[52] = ['52', 'Personal identification number (PIN) data', 'B', 64, 'b']
+    _BITS_VALUE_TYPE[53] = ['53', 'Security related control information', 'NLL', 16, 'n']
     _BITS_VALUE_TYPE[54] = ['54', 'Amounts additional', 'LLL', 120, 'an']
-    _BITS_VALUE_TYPE[55] = ['55', 'Integrated circuit card (ICC) system related data', 'LLL', 999, 'ans']
+    _BITS_VALUE_TYPE[55] = ['55', 'Integrated circuit card (ICC) system related data', 'B', 255, 'b']
     _BITS_VALUE_TYPE[56] = ['56', 'Original data elements', 'LLL', 999, 'ans']
     _BITS_VALUE_TYPE[57] = ['57', 'Authorisation life cycle code', 'LLL', 999, 'ans']
     _BITS_VALUE_TYPE[58] = ['58', 'Authorising agent institution identification code', 'LLL', 999, 'ans']
     _BITS_VALUE_TYPE[59] = ['59', 'Transport data', 'LLL', 999, 'ans']
-    _BITS_VALUE_TYPE[60] = ['60', 'Reserved for national use', 'LL', 7, 'ans']
+    _BITS_VALUE_TYPE[60] = ['60', 'Reserved for national use', 'LLL', 999, 'ans']
     _BITS_VALUE_TYPE[61] = ['61', 'Reserved for national use', 'LLL', 999, 'ans']
     _BITS_VALUE_TYPE[62] = ['62', 'Reserved for private use', 'LLL', 999, 'ans']
     _BITS_VALUE_TYPE[63] = ['63', 'Reserved for private use', 'LLL', 999, 'ans']
-    _BITS_VALUE_TYPE[64] = ['64', 'Message authentication code (MAC) field', 'B', 16, 'b']
+    _BITS_VALUE_TYPE[64] = ['64', 'Message authentication code (MAC) field', 'B', 64, 'b']
     _BITS_VALUE_TYPE[65] = ['65', 'Bitmap tertiary', 'B', 16, 'b']
     _BITS_VALUE_TYPE[66] = ['66', 'Settlement code', 'N', 1, 'n']
     _BITS_VALUE_TYPE[67] = ['67', 'Extended payment data', 'N', 2, 'n']
@@ -215,8 +216,6 @@ class ISO8583:
     _BITS_VALUE_TYPE[126] = ['126', 'Issuer trace id', 'LL', 6, 'ans']
     _BITS_VALUE_TYPE[127] = ['127', 'Reserved for private use', 'LLL', 999, 'ans']
     _BITS_VALUE_TYPE[128] = ['128', 'Message authentication code (MAC) field', 'B', 16, 'b']
-
-
 
     ################################################################################################
     # Default constructor of the ISO8583 Object
@@ -291,7 +290,6 @@ class ISO8583:
 
     ################################################################################################
 
-
     ################################################################################################
     # Set the MTI
     def setTransationType(self, type):
@@ -364,7 +362,7 @@ class ISO8583:
 
     ################################################################################################
     # Set a value to a bit
-    def setBit(self, bit, value):
+    def setBit(self, bit, value, asc=False):
         """Method used to set a bit with a value.
         It's one of the most important method to use when using this library
         @param: bit -> bit number that want to be setted
@@ -373,7 +371,7 @@ class ISO8583:
         @raise: BitInexistent Exception, ValueToLarge Exception
         """
         if self.DEBUG == True:
-            print('Setting bit inside bitmap bit',bit,' =',value)
+            print('Setting bit inside bitmap bit', bit, ' =', value)
 
         if bit < 1 or bit > 128:
             raise BitInexistent("Bit number %s dosen't exist!" % bit)
@@ -382,24 +380,22 @@ class ISO8583:
         pos = 1
 
         if self.getBitType(bit) == 'LL':
-            self.__setBitTypeLL(bit, value)
+            self.__setBitTypeLL(bit, value, asc)
 
         if self.getBitType(bit) == 'LLL':
-            self.__setBitTypeLLL(bit, value)
+            self.__setBitTypeLLL(bit, value, asc)
 
         if self.getBitType(bit) == 'N':
-            self.__setBitTypeN(bit, value)
+            self.__setBitTypeN(bit, value, asc)
 
         if self.getBitType(bit) == 'A':
-            self.__setBitTypeA(bit, value)
+            self.__setBitTypeA(bit, value, asc)
 
-        if self.getBitType(bit) == 'ANS' or self.getBitType(bit) == 'B':
-            self.__setBitTypeANS(bit, value)
+        if self.getBitType(bit) == 'ANS':
+            self.__setBitTypeANS(bit, value, asc)
 
         if self.getBitType(bit) == 'B':
             self.__setBitTypeB(bit, value)
-
-
 
         # Continuation bit?
         if bit > 64:
@@ -520,7 +516,7 @@ class ISO8583:
             for d in range(1, 9):
                 if self.DEBUG == True:
                     print('Value (%d)-> %s & %s = %s' % (
-                    d, self.BITMAP[c], self._TMP[d], (self.BITMAP[c] & self._TMP[d])))
+                        d, self.BITMAP[c], self._TMP[d], (self.BITMAP[c] & self._TMP[d])))
                 if (self.BITMAP[c] & self._TMP[d]) == self._TMP[d]:
                     if d == 1:  # e o 8 bit
                         if self.DEBUG == True:
@@ -558,7 +554,7 @@ class ISO8583:
             for d in range(1, 9):
                 if self.DEBUG == True:
                     print('Value (%d)-> %s & %s = %s' % (
-                    d, self.BITMAP[c], self._TMP[d], (self.BITMAP[c] & self._TMP[d])))
+                        d, self.BITMAP[c], self._TMP[d], (self.BITMAP[c] & self._TMP[d])))
                 if (self.BITMAP[c] & self._TMP[d]) == self._TMP[d]:
                     if d == 1:  # e o 8 bit
                         if self.DEBUG == True:
@@ -585,8 +581,12 @@ class ISO8583:
     ################################################################################################
 
     ################################################################################################
+
+    def __getHexAscii(self, value):
+        return ''.join(str(format(ord(c), "x")) for c in value)
+
     # Set of type LL
-    def __setBitTypeLL(self, bit, value):
+    def __setBitTypeLL(self, bit, value, asc):
         """Method that set a bit with value in form LL
         It put the size in front of the value
         Example: pack.setBit(99,'123') -> Bit 99 is a LL type, so this bit, in ASCII form need to be 03123. To understand, 03 is the size of the information and 123 is the information/value
@@ -601,20 +601,22 @@ class ISO8583:
         if len(value) > 99:
             # value = value[0:99]
             raise ValueToLarge('Error: value up to size! Bit[%s] of type %s limit size = %s' % (
-            bit, self.getBitType(bit), self.getBitLimit(bit)))
+                bit, self.getBitType(bit), self.getBitLimit(bit)))
         if len(value) > self.getBitLimit(bit):
             raise ValueToLarge('Error: value up to size! Bit[%s] of type %s limit size = %s' % (
-            bit, self.getBitType(bit), self.getBitLimit(bit)))
+                bit, self.getBitType(bit), self.getBitLimit(bit)))
 
         size = "%s" % len(value)
-
-        self.BITMAP_VALUES[bit] = "%s%s" % (size.zfill(2), value)
+        if asc:
+            value = self.__getHexAscii(value)
+        value = "%s%s" % (size.zfill(2), value)
+        self.BITMAP_VALUES[bit] = value
 
     ################################################################################################
 
     ################################################################################################
     # Set of type LLL
-    def __setBitTypeLLL(self, bit, value):
+    def __setBitTypeLLL(self, bit, value, asc):
         """Method that set a bit with value in form LLL
         It put the size in front of the value
         Example: pack.setBit(104,'12345ABCD67890') -> Bit 104 is a LLL type, so this bit, in ASCII form need to be 01412345ABCD67890.
@@ -629,20 +631,40 @@ class ISO8583:
 
         if len(value) > 999:
             raise ValueToLarge('Error: value up to size! Bit[%s] of type %s limit size = %s' % (
-            bit, self.getBitType(bit), self.getBitLimit(bit)))
+                bit, self.getBitType(bit), self.getBitLimit(bit)))
         if len(value) > self.getBitLimit(bit):
             raise ValueToLarge('Error: value up to size! Bit[%s] of type %s limit size = %s' % (
-            bit, self.getBitType(bit), self.getBitLimit(bit)))
+                bit, self.getBitType(bit), self.getBitLimit(bit)))
 
-        size = "%s" % len(value)
+        size = ""
 
-        self.BITMAP_VALUES[bit] = "%s%s" % (size.zfill(3), value)
+        if '|' in value:
+            length = 0
+            subfields = value.split('|')
+            value = ""
+            for f in subfields:
+                length += len(f)
+                if asc:
+                    sub_val = self.__getHexAscii(f)
+                    value += "%s%s" % (("%s" % len(f)).zfill(4), sub_val)
+                    length += 2
+                else:
+                    value += f
+
+            size = "%s" % length
+        else:
+            size = "%s" % len(value)
+            if asc:
+                value = self.__getHexAscii(value)
+
+        value = "%s%s" % (size.zfill(4), value)
+        self.BITMAP_VALUES[bit] = value
 
     ################################################################################################
 
     ################################################################################################
     # Set of type N,
-    def __setBitTypeN(self, bit, value):
+    def __setBitTypeN(self, bit, value, asc):
         """Method that set a bit with value in form N
         It complete the size of the bit with a default value
         Example: pack.setBit(3,'30000') -> Bit 3 is a N type, so this bit, in ASCII form need to has size = 6 (ISO especification) so the value 30000 size = 5 need to receive more "1" number.
@@ -658,15 +680,18 @@ class ISO8583:
         if len(value) > self.getBitLimit(bit):
             value = value[0:self.getBitLimit(bit)]
             raise ValueToLarge('Error: value up to size! Bit[%s] of type %s limit size = %s' % (
-            bit, self.getBitType(bit), self.getBitLimit(bit)))
+                bit, self.getBitType(bit), self.getBitLimit(bit)))
 
-        self.BITMAP_VALUES[bit] = value.zfill(self.getBitLimit(bit))
+        value = value.zfill(self.getBitLimit(bit))
+        if asc:
+            value = self.__getHexAscii(value)
+        self.BITMAP_VALUES[bit] = value
 
     ################################################################################################
 
     ################################################################################################
     # Set of type A
-    def __setBitTypeA(self, bit, value):
+    def __setBitTypeA(self, bit, value, asc):
         """Method that set a bit with value in form A
         It complete the size of the bit with a default value
         Example: pack.setBit(3,'30000') -> Bit 3 is a A type, so this bit, in ASCII form need to has size = 6 (ISO especification) so the value 30000 size = 5 need to receive more "1" number.
@@ -682,9 +707,11 @@ class ISO8583:
         if len(value) > self.getBitLimit(bit):
             value = value[0:self.getBitLimit(bit)]
             raise ValueToLarge('Error: value up to size! Bit[%s] of type %s limit size = %s' % (
-            bit, self.getBitType(bit), self.getBitLimit(bit)))
-
-        self.BITMAP_VALUES[bit] = value.zfill(self.getBitLimit(bit))
+                bit, self.getBitType(bit), self.getBitLimit(bit)))
+        value = value.zfill(self.getBitLimit(bit))
+        if asc:
+            value = self.__getHexAscii(value)
+        self.BITMAP_VALUES[bit] = value
 
     ################################################################################################
 
@@ -706,7 +733,7 @@ class ISO8583:
         if len(value) > self.getBitLimit(bit):
             value = value[0:self.getBitLimit(bit)]
             raise ValueToLarge('Error: value up to size! Bit[%s] of type %s limit size = %s' % (
-            bit, self.getBitType(bit), self.getBitLimit(bit)))
+                bit, self.getBitType(bit), self.getBitLimit(bit)))
 
         self.BITMAP_VALUES[bit] = value.zfill(self.getBitLimit(bit))
 
@@ -714,7 +741,7 @@ class ISO8583:
 
     ################################################################################################
     # Set of type ANS
-    def __setBitTypeANS(self, bit, value):
+    def __setBitTypeANS(self, bit, value, asc):
         """Method that set a bit with value in form ANS
         It complete the size of the bit with a default value
         Example: pack.setBit(3,'30000') -> Bit 3 is a ANS type, so this bit, in ASCII form need to has size = 6 (ISO especification) so the value 30000 size = 5 need to receive more "1" number.
@@ -730,9 +757,14 @@ class ISO8583:
         if len(value) > self.getBitLimit(bit):
             value = value[0:self.getBitLimit(bit)]
             raise ValueToLarge('Error: value up to size! Bit[%s] of type %s limit size = %s' % (
-            bit, self.getBitType(bit), self.getBitLimit(bit)))
+                bit, self.getBitType(bit), self.getBitLimit(bit)))
 
         self.BITMAP_VALUES[bit] = value.zfill(self.getBitLimit(bit))
+
+        value = value.zfill(self.getBitLimit(bit))
+        if asc:
+            value = self.__getHexAscii(value)
+        self.BITMAP_VALUES[bit] = value
 
     ################################################################################################
 
@@ -755,7 +787,7 @@ class ISO8583:
         for cont in range(0, 129):
             if self.BITMAP_VALUES[cont] != self._BIT_DEFAULT_VALUE:
                 print("Bit[%s] of type %s has limit %s = %s" % (
-                cont, self.getBitType(cont), self.getBitLimit(cont), self.BITMAP_VALUES[cont]))
+                    cont, self.getBitType(cont), self.getBitLimit(cont), self.BITMAP_VALUES[cont]))
 
     ################################################################################################
 
@@ -839,7 +871,7 @@ class ISO8583:
 
         if self.DEBUG == True:
             print('Trying to redefine the bit with (self,%s,%s,%s,%s,%s,%s)' % (
-            bit, smallStr, largeStr, bitType, size, valueType))
+                bit, smallStr, largeStr, bitType, size, valueType))
 
         # validating bit position
         if bit == 1 or bit == 64 or bit < 0 or bit > 128:
@@ -856,12 +888,12 @@ class ISO8583:
             else:
                 raise InvalidValueType(
                     "Error bit %d cannot be changed because %s is not a valid valueType (a, an, n ansb, b)!" % (
-                    bit, valueType))
+                        bit, valueType))
             # return
         else:
             raise InvalidBitType(
                 "Error bit %d cannot be changed because %s is not a valid bitType (Hex, N, AN, ANS, LL, LLL)!" % (
-                bit, bitType))
+                    bit, bitType))
         # return
 
     ################################################################################################
@@ -1057,7 +1089,7 @@ class ISO8583:
         """
         ret = -1  # By default is different
         if (self.getMTI() == obj2.getMTI()) and (self.getBitmap() == obj2.getBitmap()) and (
-            self.getValuesArray() == obj2.getValuesArray()):
+                self.getValuesArray() == obj2.getValuesArray()):
             ret = 0
 
         return ret
