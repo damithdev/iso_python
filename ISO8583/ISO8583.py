@@ -140,7 +140,7 @@ class ISO8583:
     _BITS_VALUE_TYPE[50] = ['50', 'Currency code, settlement', 'AN', 3, 'an']
     _BITS_VALUE_TYPE[51] = ['51', 'Currency code, cardholder billing', 'A', 3, 'a']
     _BITS_VALUE_TYPE[52] = ['52', 'Personal identification number (PIN) data', 'B', 64, 'b']
-    _BITS_VALUE_TYPE[53] = ['53', 'Security related control information', 'NLL', 16, 'n']
+    _BITS_VALUE_TYPE[53] = ['53', 'Security related control information', 'LL', 16, 'n']
     _BITS_VALUE_TYPE[54] = ['54', 'Amounts additional', 'LLL', 120, 'an']
     _BITS_VALUE_TYPE[55] = ['55', 'Integrated circuit card (ICC) system related data', 'B', 255, 'b']
     _BITS_VALUE_TYPE[56] = ['56', 'Original data elements', 'LLL', 999, 'ans']
